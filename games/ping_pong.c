@@ -279,12 +279,7 @@ void reset_ball(GameState *game) {
     game->ball.rect.y = SCREEN_HEIGHT / 2 - BALL_SIZE / 2;
 
     const float angle_offset = GetRandomValue(-45, 45) * (PI / 180.f);
-    float angle;
-    if (GetRandomValue(0, 1) == 0) {
-        angle = angle_offset;
-    } else {
-        angle = PI + angle_offset;
-    }
+    const float angle = GetRandomValue(0, 1) == 0 ? angle_offset : angle_offset + PI;
 
     game->ball.speed.x = BALL_SPEED * cosf(angle);
     game->ball.speed.y = BALL_SPEED * sinf(angle);
@@ -356,7 +351,6 @@ void draw_menu(void) {
     const float info_width = MeasureText(MENU_INFO_SECTION, MENU_FONT_SIZE);
 
     const float total_text_height = MENU_TITLE_FONT_SIZE + MENU_FONT_SIZE + MENU_FONT_SIZE + (2 * PADDING);
-
     const float start_y = SCREEN_HEIGHT / 2 - total_text_height / 2;
 
     BeginDrawing();
@@ -381,9 +375,8 @@ void draw_info(void) {
     const float line3_width = MeasureText(MENU_INFO_LINE3, MENU_FONT_SIZE);
     const float line4_width = MeasureText(MENU_INFO_LINE4, MENU_FONT_SIZE);
 
-    float total_text_height = MENU_TITLE_FONT_SIZE + (4 * MENU_FONT_SIZE) + (4 * PADDING);
-
-    float start_y = SCREEN_HEIGHT / 2 - total_text_height / 2;
+    const float total_text_height = MENU_TITLE_FONT_SIZE + (4 * MENU_FONT_SIZE) + (4 * PADDING);
+    const float start_y = SCREEN_HEIGHT / 2 - total_text_height / 2;
 
     BeginDrawing();
 
