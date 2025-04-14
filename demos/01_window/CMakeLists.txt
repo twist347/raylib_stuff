@@ -1,0 +1,2 @@
+add_executable(01_switch_bg_color 01_switch_bg_color.c)
+target_link_libraries(01_switch_bg_color raylib m)
