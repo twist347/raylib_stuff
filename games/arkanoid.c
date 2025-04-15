@@ -29,14 +29,14 @@ const float PADDLE_SPEED = 20.f;
 
 // ball settings
 const float BALL_RADIUS = 15.f;
-const float BALL_POS_X = SCREEN_WIDTH / 2.f;
-const float BALL_POS_Y = SCREEN_HEIGHT - 500.f;
+const float BALL_POS_X = PADDLE_POS_X + PADDLE_HEIGHT / 2;
+const float BALL_POS_Y = PADDLE_POS_Y - BALL_RADIUS;
 const float BALL_SPEED = 10.f;
 #define BALL_COLOR RED
 
 // brick settings
 #define LINES_OF_BRICK 5
-#define BRICKS_PER_LINE 25
+#define BRICKS_PER_LINE 8
 const float BRICK_MARGIN = 5.f;
 const float BRICK_WIDTH = SCREEN_WIDTH / BRICKS_PER_LINE;
 const float BRICK_HEIGHT = 40.f;
@@ -52,14 +52,14 @@ const int TEXT_FONT_SIZE = 50;
 const float WIN_TEXT_POS_X = SCREEN_WIDTH / 2.f - 160.f;
 const float WIN_TEXT_POS_Y = SCREEN_HEIGHT / 2.f;
 const char *WIN_TEXT = "YOU WIN";
-const int WIN_TEXT_FONT_SIZE = 60;
+const int WIN_TEXT_FONT_SIZE = 80;
 #define WIN_TEXT_COLOR GREEN
 
 // GAME OVER settings
 const char *GAME_OVER_TEXT = "GAME OVER";
 const float GAME_OVER_TEXT_POS_X = SCREEN_WIDTH / 2.f - 200.f;
 const float GAME_OVER_TEXT_POS_Y = SCREEN_HEIGHT / 2.f;
-const int GAME_OVER_TEXT_FONT_SIZE = 60;
+const int GAME_OVER_TEXT_FONT_SIZE = 80;
 #define GAME_OVER_TEXT_COLOR RED
 
 // FPS text
@@ -77,6 +77,7 @@ typedef struct {
     Vector2 pos;
     float radius;
     Vector2 speed;
+    bool launched;
     Color color;
 } Ball;
 
@@ -110,6 +111,7 @@ void handle_ball_brick_collision(GameState *game);
 void handle_ball_loss(GameState *game);
 void reset_ball(GameState *game);
 bool all_bricks_destroyed(GameState *game);
+Vector2 get_ball_init_pos(GameState *game);
 
 void update(GameState *game);
 
@@ -144,6 +146,7 @@ void init_game(GameState *game) {
         .pos = {BALL_POS_X, BALL_POS_Y},
         .radius = BALL_RADIUS,
         .speed = {BALL_SPEED, BALL_SPEED},
+        .launched = false,
         .color = BALL_COLOR
     };
 
@@ -157,7 +160,7 @@ void init_game(GameState *game) {
                 j * BRICK_WIDTH + BRICK_MARGIN,
                 i * BRICK_HEIGHT + BRICK_MARGIN,
                 BRICK_WIDTH - 2 * BRICK_MARGIN,
-                BRICK_HEIGHT - BRICK_MARGIN
+                BRICK_HEIGHT - 2 * BRICK_MARGIN
             };
             brick->active = true;
             brick->color = BRICK_COLOR;
@@ -190,20 +193,44 @@ void handle_paddle_wall_collision(Paddle *paddle) {
 }
 
 void handle_ball_wall_collision(GameState *game) {
-    if (game->ball.pos.x <= 0 || game->ball.pos.x + game->ball.radius >= SCREEN_WIDTH) {
+    if (game->ball.pos.x - game->ball.radius <= 0 || game->ball.pos.x + game->ball.radius >= SCREEN_WIDTH) {
         game->ball.speed.x *= -1.f;
     }
 
-    if (game->ball.pos.y <= 0) {
-        game->ball.speed.y *= -1;
+    if (game->ball.pos.y - game->ball.radius <= 0) {
+        game->ball.speed.y *= -1.f;
     }
 }
 
 void handle_ball_paddle_collision(GameState *game) {
+    if (game->ball.speed.y > 0 && 
+        CheckCollisionCircleRec(game->ball.pos, game->ball.radius, game->player.rect)) {
+        
+        const float paddle_center = game->player.rect.x + game->player.rect.width / 2.0f;
+        const float relative_intersect_x = game->ball.pos.x - paddle_center;
+        float inter_factor = relative_intersect_x / (game->player.rect.width / 2.0f);
+        
+        static const float max_normalized = 0.8f;
+        if (inter_factor > max_normalized) { 
+            inter_factor = max_normalized;
+        }
+        if (inter_factor < -max_normalized) {
+            inter_factor = -max_normalized;
+        }
+
+        game->ball.speed.x = inter_factor * BALL_SPEED;
+        const float new_speed_y = sqrtf(BALL_SPEED * BALL_SPEED - game->ball.speed.x * game->ball.speed.x);
+        game->ball.speed.y = -new_speed_y; 
+        
+        // prevent stuck in paddle
+        game->ball.pos.y = game->player.rect.y - game->ball.radius;
+    }
+    /*
     if (CheckCollisionCircleRec(game->ball.pos, game->ball.radius, game->player.rect)) {
         game->ball.speed.y *= -1.f; 
         game->ball.pos.y -= game->ball.radius;
     }
+    */
 }
 
 void handle_ball_brick_collision(GameState *game) {
@@ -217,14 +244,14 @@ void handle_ball_brick_collision(GameState *game) {
             if (CheckCollisionCircleRec(game->ball.pos, game->ball.radius, brick->rect)) {
                 brick->active = false;
                 game->ball.speed.y *= -1.f;
-                return; 
+                // return; 
             }
         }
     }
 }
 
 void handle_ball_loss(GameState *game) {
-    if (game->ball.pos.y > SCREEN_HEIGHT) {
+    if (game->ball.pos.y + game->ball.radius > SCREEN_HEIGHT) {
         --game->player.lives;
 
         if (game->player.lives == 0) {
@@ -235,8 +262,9 @@ void handle_ball_loss(GameState *game) {
 }
 
 void reset_ball(GameState *game) {
-    game->ball.pos.x = BALL_POS_X;
-    game->ball.pos.y = BALL_POS_Y;
+    game->ball.launched = false;
+    
+    game->ball.pos = get_ball_init_pos(game);
     
     const float angle_rad = (45.f + (float) GetRandomValue(0, 90)) * (PI / 180.f); 
 
@@ -259,19 +287,36 @@ void update(GameState *game) {
         return;
     }
     
-    game->ball.pos.x += game->ball.speed.x;
-    game->ball.pos.y += game->ball.speed.y;
-
     handle_paddle_wall_collision(&game->player); 
-    handle_ball_wall_collision(game);
-    handle_ball_paddle_collision(game);
-    handle_ball_brick_collision(game);
     
-    handle_ball_loss(game);
-    
-    if (all_bricks_destroyed(game)) {
-        game->status = GAME_WIN;
+    if (!game->ball.launched) {
+        game->ball.pos = get_ball_init_pos(game);
+        if (IsKeyPressed(KEY_SPACE)) {
+            const float angle_rad = (45.f + (float) GetRandomValue(0, 90)) * (PI / 180.f);
+            game->ball.speed = (Vector2){BALL_SPEED * cosf(angle_rad), -BALL_SPEED * sinf(angle_rad)};
+            game->ball.launched = true;
+        }        
+    } else {
+        game->ball.pos.x += game->ball.speed.x;
+        game->ball.pos.y += game->ball.speed.y;
+
+        handle_ball_wall_collision(game);
+        handle_ball_paddle_collision(game);
+        handle_ball_brick_collision(game);
+        
+        handle_ball_loss(game);
+        
+        if (all_bricks_destroyed(game)) {
+            game->status = GAME_WIN;
+        }
     }
+}
+
+Vector2 get_ball_init_pos(GameState *game) {
+    return (Vector2) {
+        .x = game->player.rect.x + game->player.rect.width / 2.f,
+        .y = game->player.rect.y - game->ball.radius
+    };
 }
 
 void draw(GameState *game) {
