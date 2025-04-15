@@ -8,6 +8,8 @@ set(LESSONS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/lessons)
 set(DEMOS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/demos)
 set(GAMES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/games)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 add_compile_options(-Wall -Wextra -pedantic)
 
 include_directories(${RAYLIB_DIR}/include)
