@@ -22,5 +22,6 @@ add_subdirectory(${DEMOS_DIR}/01_window)
 add_subdirectory(${DEMOS_DIR}/02_primitives)
 
 add_subdirectory(${GAMES_DIR})
+add_subdirectory(${GAMES_DIR}/ping_pong_game)
 
 add_subdirectory(test_stuff)

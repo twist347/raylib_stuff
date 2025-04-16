@@ -3,33 +3,37 @@
 // TODO: rewrite using time related update instead of FPS
 // TODO: rewrite TextFormat, because it recalculates in every frame
 
+// NOTE: using defines because of -pedantic flag
+
 #include <math.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
 
-#include <raylib.h>
+#include "raylib.h"
 
 // screen settings
 const float SCREEN_WIDTH = 1920.f;
 const float SCREEN_HEIGHT = 1080.f;
-const int FPS = 60;
 const char *WINDOW_LABEL = "Arkanoid";
 #define BG_COLOR BLACK
 
-const int LIVES = 3;
+// fps settings
+const int FPS = 60;
+const float FPS_TEXT_POS_X = SCREEN_WIDTH - 80.f; 
+const float FPS_TEXT_POS_Y = SCREEN_HEIGHT - 20.f; 
 
 // paddle settings
 const float PADDLE_WIDTH = 250.f;
 const float PADDLE_HEIGHT = 20.f;
 const float PADDLE_POS_X = SCREEN_WIDTH / 2.f - PADDLE_WIDTH / 2.f;
-const float PADDLE_POS_Y = SCREEN_HEIGHT - 50;
+const float PADDLE_POS_Y = SCREEN_HEIGHT - 50.f;
 const float PADDLE_SPEED = 20.f;
 #define PADDLE_COLOR WHITE
 
 // ball settings
 const float BALL_RADIUS = 15.f;
-const float BALL_POS_X = PADDLE_POS_X + PADDLE_HEIGHT / 2;
+const float BALL_POS_X = PADDLE_POS_X + PADDLE_HEIGHT / 2.f;
 const float BALL_POS_Y = PADDLE_POS_Y - BALL_RADIUS;
 const float BALL_SPEED = 10.f;
 #define BALL_COLOR RED
@@ -40,7 +44,7 @@ const float BALL_SPEED = 10.f;
 const float BRICK_MARGIN = 5.f;
 const float BRICK_WIDTH = SCREEN_WIDTH / BRICKS_PER_LINE;
 const float BRICK_HEIGHT = 40.f;
-#define BRICK_COLOR YELLOW
+#define BRICKS_COLORS (Color[LINES_OF_BRICK]){YELLOW, BLUE, GREEN, RED, PINK}
 
 // text settings
 const float TEXT_POS_X = 20.f;
@@ -62,9 +66,7 @@ const float GAME_OVER_TEXT_POS_Y = SCREEN_HEIGHT / 2.f;
 const int GAME_OVER_TEXT_FONT_SIZE = 80;
 #define GAME_OVER_TEXT_COLOR RED
 
-// FPS text
-const float FPS_TEXT_POS_X = SCREEN_WIDTH - 80.f; 
-const float FPS_TEXT_POS_Y = SCREEN_HEIGHT - 20.f; 
+const int LIVES = 3;
 
 typedef struct {
     Rectangle rect;
@@ -163,7 +165,7 @@ void init_game(GameState *game) {
                 BRICK_HEIGHT - 2 * BRICK_MARGIN
             };
             brick->active = true;
-            brick->color = BRICK_COLOR;
+            brick->color = BRICKS_COLORS[i];
         }
     }
     

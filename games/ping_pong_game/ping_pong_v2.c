@@ -44,8 +44,8 @@ const int SCORES_TEXT_FONT_SIZE = 50;
 #define SCORES_TEXT_COLOR WHITE
 
 // dash line settings
-const float DASH_LINE_HEIGHT = 20.f; 
-const float DASH_LINE_GAP_HEIGHT = 10.f; 
+const float DASH_LINE_HEIGHT = 20.f;
+const float DASH_LINE_GAP_HEIGHT = 10.f;
 const float DASH_LINE_CENTER_X = SCREEN_WIDTH / 2.f;
 #define DASH_LINE_COLOR WHITE
 
@@ -63,19 +63,28 @@ typedef struct {
     Color color;
 } Ball;
 
+typedef enum {
+    SCREEN_GAME,
+    SCREEN_MENU,
+    SCREEN_HELP
+} GameScreen;
+
 typedef struct {
     Paddle left_paddle;
     Paddle right_paddle;
     Ball ball;
     int left_player_score;
     int right_player_score;
+    GameScreen screen;
 } GameState;
 
 void init_game(GameState *game);
 
-void input(GameState *game, float dt);
+void handle_game_input(GameState *game, float dt);
+void handle_menu_input(GameState *game);
+void handle_help_input(GameState *game);
 
-void update(GameState *game, float dt);
+void update_game(GameState *game, float dt);
 void update_ball(GameState *game, float dt);
 void handle_paddle_wall_collision(Paddle *paddle);
 void handle_ball_wall_collision(GameState *game);
@@ -86,9 +95,11 @@ void simple_handle_ball_paddle_collision(GameState *game);
 void advanced_handle_ball_paddle_collision(GameState *game);
 float get_ball_reflection_angle(Paddle *paddle, float ball_y);
 
-void draw(const GameState *game);
+void draw_game(const GameState *game);
 void draw_scores(const GameState *game);
 void draw_dash_line(void);
+void draw_menu(void);
+void draw_help(void);
 
 int main(void) {
     InitWindow((int)SCREEN_WIDTH, (int)SCREEN_HEIGHT, WINDOW_LABEL);
@@ -100,10 +111,24 @@ int main(void) {
 
     while (!WindowShouldClose()) {
         const float dt = GetFrameTime();
-        
-        input(&game, dt);
-        update(&game, dt);
-        draw(&game);
+
+        switch (game.screen) {
+            case SCREEN_MENU:
+                handle_menu_input(&game);
+                draw_menu();
+                break;
+            case SCREEN_GAME:
+                handle_game_input(&game, dt);
+                update_game(&game, dt);
+                draw_game(&game);
+                break;
+            case SCREEN_HELP:
+                handle_help_input(&game);
+                draw_help();
+                break;
+            default:
+                break;
+        }
     }
 
     CloseWindow();
@@ -115,7 +140,7 @@ void init_game(GameState *game) {
         .velocity = PADDLE_VELOCITY,
         .color = PADDLE_COLOR
     };
-    
+
     Paddle right_paddle = {
         .rect = {RIGHT_PADDLE_POS_X, RIGHT_PADDLE_POS_Y, PADDLE_WIDTH, PADDLE_HEIGHT},
         .velocity = PADDLE_VELOCITY,
@@ -129,15 +154,16 @@ void init_game(GameState *game) {
         .active = false,
         .color = BALL_COLOR
     };
-    
+
     game->left_paddle = left_paddle;
     game->right_paddle = right_paddle;
     game->ball = ball;
     game->left_player_score = 0;
     game->right_player_score = 0;
+    game->screen = SCREEN_MENU;
 }
 
-void input(GameState *game, float dt) {
+void handle_game_input(GameState *game, float dt) {
     if (IsKeyDown(KEY_W)) {
         game->left_paddle.rect.y -= game->left_paddle.velocity * dt;
     }
@@ -151,16 +177,36 @@ void input(GameState *game, float dt) {
     if (IsKeyDown(KEY_DOWN)) {
         game->right_paddle.rect.y += game->right_paddle.velocity * dt;
     }
+
+    if (IsKeyPressed(KEY_M)) {
+        init_game(game);
+        game->screen = SCREEN_MENU;
+    }
 }
 
-void update(GameState *game, float dt) {
-    handle_paddle_wall_collision(&game->left_paddle); 
+void handle_menu_input(GameState *game) {
+    if (IsKeyPressed(KEY_ENTER)) {
+        game->screen = SCREEN_GAME;
+    }
+    if (IsKeyPressed(KEY_H)) {
+        game->screen = SCREEN_HELP;
+    }
+}
+
+void handle_help_input(GameState *game) {
+    if (IsKeyPressed(KEY_ENTER)) {
+        game->screen = SCREEN_MENU;
+    }
+}
+
+void update_game(GameState *game, float dt) {
+    handle_paddle_wall_collision(&game->left_paddle);
     handle_paddle_wall_collision(&game->right_paddle);
 
     if (IsKeyPressed(KEY_SPACE)) {
         game->ball.active = true;
     }
-    
+
     if (game->ball.active) {
         update_ball(game, dt);
         handle_ball_wall_collision(game);
@@ -191,7 +237,7 @@ void handle_ball_wall_collision(GameState *game) {
 
 void handle_ball_paddle_collision(GameState *game) {
     // simple_handle_ball_paddle_collision(game);
-    advanced_handle_ball_paddle_collision(game);    
+    advanced_handle_ball_paddle_collision(game);
 }
 
 void update_score(GameState *game) {
@@ -211,7 +257,7 @@ void reset_ball(GameState *game) {
 
     const float angle_offset = GetRandomValue(-45, 45) * (PI / 180.f);
     const float angle = GetRandomValue(0, 1) == 0 ? angle_offset : angle_offset + PI;
-    game->ball.velocity = (Vector2){BALL_VELOCITY * cosf(angle), BALL_VELOCITY * sinf(angle)}; 
+    game->ball.velocity = (Vector2){BALL_VELOCITY * cosf(angle), BALL_VELOCITY * sinf(angle)};
 
     game->ball.active = false;
 }
@@ -233,9 +279,9 @@ void simple_handle_ball_paddle_collision(GameState *game) {
 
 void advanced_handle_ball_paddle_collision(GameState *game) {
     float vel = sqrtf(powf(game->ball.velocity.x, 2) + powf(game->ball.velocity.y, 2));
-    
+
     Paddle *paddles[2] = {&game->left_paddle, &game->right_paddle};
-    
+
     for (int i = 0; i < 2; ++i) {
         Paddle *paddle = paddles[i];
         const bool is_left = i == 0;
@@ -258,7 +304,7 @@ float get_ball_reflection_angle(Paddle *paddle, float ball_y) {
     return norm * BALL_MAX_REFLECTION_ANGLE_RAD;
 }
 
-void draw(const GameState *game) {
+void draw_game(const GameState *game) {
     BeginDrawing();
 
     ClearBackground(BG_COLOR);
@@ -267,7 +313,7 @@ void draw(const GameState *game) {
 
     DrawRectangleRec(game->left_paddle.rect, game->left_paddle.color);
     DrawRectangleRec(game->right_paddle.rect, game->right_paddle.color);
-   
+
     DrawCircleV(game->ball.pos, game->ball.radius, game->ball.color);
 
     draw_scores(game);
@@ -289,7 +335,7 @@ void draw_scores(const GameState *game) {
         SCORES_TEXT_RIGHT_POS_X, SCORES_TEXT_RIGHT_POS_Y,
         SCORES_TEXT_FONT_SIZE,
         SCORES_TEXT_COLOR
-    ); 
+    );
 }
 
 void draw_dash_line(void) {
@@ -297,4 +343,41 @@ void draw_dash_line(void) {
         const float CUR_DASH_HEIGHT = ((y + DASH_LINE_HEIGHT) > SCREEN_HEIGHT) ? (SCREEN_HEIGHT - y) : DASH_LINE_HEIGHT;
         DrawLine(DASH_LINE_CENTER_X, y, DASH_LINE_CENTER_X, y + CUR_DASH_HEIGHT, DASH_LINE_COLOR);
     }
+}
+
+void draw_menu(void) {
+    BeginDrawing();
+    ClearBackground(BG_COLOR);
+
+    const char *title = "Ping Pong V2";
+    const char *instruction1 = "Press ENTER to start game";
+    const char *instruction2 = "Press H for Help";
+
+    int titleWidth = MeasureText(title, 60);
+    int instr1Width = MeasureText(instruction1, 40);
+    int instr2Width = MeasureText(instruction2, 40);
+
+    DrawText(title, SCREEN_WIDTH / 2 - titleWidth / 2, SCREEN_HEIGHT / 2 - 150, 60, WHITE);
+    DrawText(instruction1, SCREEN_WIDTH / 2 - instr1Width / 2, SCREEN_HEIGHT / 2 - 50, 40, WHITE);
+    DrawText(instruction2, SCREEN_WIDTH / 2 - instr2Width / 2, SCREEN_HEIGHT / 2 + 10, 40, WHITE);
+
+    EndDrawing();
+}
+
+void draw_help(void) {
+    BeginDrawing();
+    ClearBackground(BG_COLOR);
+
+    const char *header = "Help";
+    const char *controls = "Controls:\n"
+                           "  W/S - Move left paddle\n"
+                           "  UP/DOWN - Move right paddle\n"
+                           "  SPACE - Serve the ball\n\n"
+                           "Press ESC or BACKSPACE to return to menu";
+
+    int headerWidth = MeasureText(header, 50);
+    DrawText(header, SCREEN_WIDTH / 2 - headerWidth / 2, 100, 50, WHITE);
+    DrawText(controls, SCREEN_WIDTH / 2 - 300, 200, 30, WHITE);
+
+    EndDrawing();
 }
