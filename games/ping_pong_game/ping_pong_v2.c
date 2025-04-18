@@ -7,47 +7,76 @@
 // screen settings
 const float SCREEN_WIDTH = 1920.f;
 const float SCREEN_HEIGHT = 1080.f;
+const float SW_HALF = SCREEN_WIDTH / 2.f;
+const float SH_HALF = SCREEN_HEIGHT / 2.f;
 const char *WINDOW_LABEL = "Ping Pong V2";
 #define BG_COLOR BLACK
 
 // fps settings
-const int FPS = 60;
-const float FPS_POS_X = 10.f;
-const float FPS_POS_Y = 10.f;
+const int FPS_TEXT = 60;
+const Vector2 FPS_POS = {10.f, 10.f,};
 
 // paddles settings
 const float PADDLE_WIDTH = 20.f;
 const float PADDLE_HEIGHT = 200.f;
-const float LEFT_PADDLE_POS_X = 20.f;
-const float LEFT_PADDLE_POS_Y = SCREEN_HEIGHT / 2.f - PADDLE_HEIGHT / 2.f;
-const float RIGHT_PADDLE_POS_X = SCREEN_WIDTH - 20.f - PADDLE_WIDTH;
-const float RIGHT_PADDLE_POS_Y = LEFT_PADDLE_POS_Y;
+const Vector2 LEFT_PADDLE_POS = {20.f, SH_HALF - PADDLE_HEIGHT / 2.f};
+const Vector2 RIGHT_PADDLE_POS = {SCREEN_WIDTH - 20.f - PADDLE_WIDTH, LEFT_PADDLE_POS.y};
 const float PADDLE_VELOCITY = 500.f;
+const float PADDLE_VELOCITY_SCALE = 1.05f;
 #define PADDLE_COLOR WHITE
 
 // ball settings
 const float BALL_RADIUS = 15.f;
-const float BALL_POS_X = SCREEN_WIDTH / 2.f;
-const float BALL_POS_Y = SCREEN_HEIGHT / 2.f;
+const Vector2 BALL_POS = {SW_HALF, SH_HALF};
 const float BALL_VELOCITY = 500.f;
-const float BALL_VELOCITY_INCREASE_FACTOR = 1.1f;
+const float BALL_VELOCITY_SCALE = 1.1f;
 const float BALL_MAX_REFLECTION_ANGLE = 60.f;
-const float BALL_MAX_REFLECTION_ANGLE_RAD = BALL_MAX_REFLECTION_ANGLE * (PI / 180.f);
 #define BALL_COLOR RED
 
 // draw scores settings
-const float SCORES_TEXT_LEFT_POS_X = 30.f;
-const float SCORES_TEXT_LEFT_POS_Y = SCREEN_HEIGHT - 50.f;
-const float SCORES_TEXT_RIGHT_POS_X = SCREEN_WIDTH - 50.f;
-const float SCORES_TEXT_RIGHT_POS_Y = SCREEN_HEIGHT - 50.f;
+const Vector2 SCORES_TEXT_LEFT_POS = {30.f, SCREEN_HEIGHT - 50.f};
+const Vector2 SCORES_TEXT_RIGHT_POS = {SCREEN_WIDTH - 50.f, SCORES_TEXT_LEFT_POS.y};
 const int SCORES_TEXT_FONT_SIZE = 50;
 #define SCORES_TEXT_COLOR WHITE
 
 // dash line settings
 const float DASH_LINE_HEIGHT = 20.f;
 const float DASH_LINE_GAP_HEIGHT = 10.f;
-const float DASH_LINE_CENTER_X = SCREEN_WIDTH / 2.f;
+const float DASH_LINE_CENTER_X = SW_HALF;
 #define DASH_LINE_COLOR WHITE
+
+// menu settings
+const int MENU_TEXT_TITLE_FONT_SIZE = 60;
+const int MENU_TEXT_FONT_SIZE = 40;
+#define MENU_TEXT_TITLE_COLOR RED
+#define MENU_TEXT_COLOR WHITE
+
+typedef struct {
+    const char *text;
+    int font_size;
+    Color color;
+    Vector2 pos;
+    int width;
+} MenuItem;
+
+const char *MAIN_MENU_TEXTS[] = {
+    "Ping Pong V2",
+    "Press ENTER to start game",
+    "Press H for Help"
+};
+MenuItem main_menu[sizeof(MAIN_MENU_TEXTS) / sizeof(MAIN_MENU_TEXTS[0])];
+
+const char *HELP_MENU_TEXTS[] = {
+    "Help",
+    "Controls:",
+    "  W/S - Move left paddle",
+    "  UP/DOWN - Move right paddle",
+    "  SPACE - Serve the ball",
+    "  M - Return to menu (from game)",
+    "  ESC - End the game",
+    "Press ENTER to return to menu"
+};
+MenuItem help_menu[sizeof(HELP_MENU_TEXTS) / sizeof(HELP_MENU_TEXTS[0])];
 
 typedef struct {
     Rectangle rect;
@@ -79,6 +108,8 @@ typedef struct {
 } GameState;
 
 void init_game(GameState *game);
+void init_main_menu(void);
+void init_help_menu(void);
 
 void handle_game_input(GameState *game, float dt);
 void handle_menu_input(GameState *game);
@@ -98,12 +129,12 @@ float get_ball_reflection_angle(Paddle *paddle, float ball_y);
 void draw_game(const GameState *game);
 void draw_scores(const GameState *game);
 void draw_dash_line(void);
-void draw_menu(void);
-void draw_help(void);
+void draw_main_menu(void);
+void draw_help_menu(void);
 
 int main(void) {
-    InitWindow((int)SCREEN_WIDTH, (int)SCREEN_HEIGHT, WINDOW_LABEL);
-    SetTargetFPS(FPS);
+    InitWindow((int) SCREEN_WIDTH, (int) SCREEN_HEIGHT, WINDOW_LABEL);
+    SetTargetFPS(FPS_TEXT);
     HideCursor();
 
     GameState game;
@@ -115,7 +146,7 @@ int main(void) {
         switch (game.screen) {
             case SCREEN_MENU:
                 handle_menu_input(&game);
-                draw_menu();
+                draw_main_menu();
                 break;
             case SCREEN_GAME:
                 handle_game_input(&game, dt);
@@ -124,7 +155,7 @@ int main(void) {
                 break;
             case SCREEN_HELP:
                 handle_help_input(&game);
-                draw_help();
+                draw_help_menu();
                 break;
             default:
                 break;
@@ -136,19 +167,19 @@ int main(void) {
 
 void init_game(GameState *game) {
     Paddle left_paddle = {
-        .rect = {LEFT_PADDLE_POS_X, LEFT_PADDLE_POS_Y, PADDLE_WIDTH, PADDLE_HEIGHT},
+        .rect = {LEFT_PADDLE_POS.x, LEFT_PADDLE_POS.y, PADDLE_WIDTH, PADDLE_HEIGHT},
         .velocity = PADDLE_VELOCITY,
         .color = PADDLE_COLOR
     };
 
     Paddle right_paddle = {
-        .rect = {RIGHT_PADDLE_POS_X, RIGHT_PADDLE_POS_Y, PADDLE_WIDTH, PADDLE_HEIGHT},
+        .rect = {RIGHT_PADDLE_POS.x, RIGHT_PADDLE_POS.y, PADDLE_WIDTH, PADDLE_HEIGHT},
         .velocity = PADDLE_VELOCITY,
         .color = PADDLE_COLOR
     };
 
     Ball ball = {
-        .pos = {BALL_POS_X, BALL_POS_Y},
+        .pos = BALL_POS,
         .radius = BALL_RADIUS,
         .velocity = {BALL_VELOCITY, BALL_VELOCITY},
         .active = false,
@@ -161,6 +192,52 @@ void init_game(GameState *game) {
     game->left_player_score = 0;
     game->right_player_score = 0;
     game->screen = SCREEN_MENU;
+
+    init_main_menu();
+    init_help_menu();
+}
+
+void init_main_menu(void) {
+    // precompute main menu items
+    const int count = sizeof(main_menu) / sizeof(main_menu[0]);
+    for (int i = 0; i < count; ++i) {
+        main_menu[i].text = MAIN_MENU_TEXTS[i];
+        if (i == 0) {
+            // title
+            main_menu[i].font_size = MENU_TEXT_TITLE_FONT_SIZE;
+            main_menu[i].color = MENU_TEXT_TITLE_COLOR;
+            main_menu[i].width = MeasureText(main_menu[i].text, main_menu[i].font_size);
+            main_menu[i].pos = (Vector2){SW_HALF - main_menu[i].width / 2, SH_HALF - 150};
+        } else {
+            // menu options
+            main_menu[i].font_size = MENU_TEXT_FONT_SIZE;
+            main_menu[i].color = MENU_TEXT_COLOR;
+            main_menu[i].width = MeasureText(main_menu[i].text, main_menu[i].font_size);
+            const float y_offset = (i == 1 ? SH_HALF - 50 : SH_HALF + 10);
+            main_menu[i].pos = (Vector2){SW_HALF - main_menu[i].width / 2, y_offset};
+        }
+    }
+}
+
+void init_help_menu(void) {
+    // precompute help menu items
+    const int count = sizeof(help_menu) / sizeof(help_menu[0]);
+    for (int i = 0; i < count; ++i) {
+        help_menu[i].text = HELP_MENU_TEXTS[i];
+        if (i == 0) {
+            // title
+            help_menu[i].font_size = MENU_TEXT_TITLE_FONT_SIZE;
+            help_menu[i].color = MENU_TEXT_TITLE_COLOR;
+            help_menu[i].width = MeasureText(help_menu[i].text, help_menu[i].font_size);
+            help_menu[i].pos = (Vector2){SW_HALF - help_menu[i].width / 2, SH_HALF - 350};
+        } else {
+            // help lines
+            help_menu[i].font_size = MENU_TEXT_FONT_SIZE;
+            help_menu[i].color = MENU_TEXT_COLOR;
+            help_menu[i].width = MeasureText(help_menu[i].text, help_menu[i].font_size);
+            help_menu[i].pos = (Vector2){SW_HALF - 300, SH_HALF - 250 + (i - 1) * (MENU_TEXT_FONT_SIZE + 10)};
+        }
+    }
 }
 
 void handle_game_input(GameState *game, float dt) {
@@ -253,7 +330,7 @@ void update_score(GameState *game) {
 }
 
 void reset_ball(GameState *game) {
-    game->ball.pos = (Vector2) {BALL_POS_X, BALL_POS_Y};
+    game->ball.pos = BALL_POS;
 
     const float angle_offset = GetRandomValue(-45, 45) * (PI / 180.f);
     const float angle = GetRandomValue(0, 1) == 0 ? angle_offset : angle_offset + PI;
@@ -287,17 +364,20 @@ void advanced_handle_ball_paddle_collision(GameState *game) {
         const bool is_left = i == 0;
         const bool is_collision = CheckCollisionCircleRec(game->ball.pos, game->ball.radius, paddle->rect);
 
+        // clamp reflection angle and increase ball and paddle velocity after collision
         if (is_collision && ((is_left && game->ball.velocity.x < 0) || (!is_left && game->ball.velocity.x > 0))) {
             const float angle = get_ball_reflection_angle(paddle, game->ball.pos.y);
             const float new_angle = is_left ? angle : PI - angle;
-            // update vel
-            vel *= BALL_VELOCITY_INCREASE_FACTOR;
-            game->ball.velocity = (Vector2) {vel * cosf(new_angle), vel * sinf(new_angle)};
+            vel *= BALL_VELOCITY_SCALE;
+            game->ball.velocity = (Vector2){vel * cosf(new_angle), vel * sinf(new_angle)};
+            game->left_paddle.velocity *= PADDLE_VELOCITY_SCALE;
+            game->right_paddle.velocity *= PADDLE_VELOCITY_SCALE;
         }
     }
 }
 
 float get_ball_reflection_angle(Paddle *paddle, float ball_y) {
+    static const float BALL_MAX_REFLECTION_ANGLE_RAD = BALL_MAX_REFLECTION_ANGLE * (PI / 180.f);
     const float paddle_center_y = paddle->rect.y + paddle->rect.height / 2.f;
     const float delta_y = ball_y - paddle_center_y;
     const float norm = Clamp(delta_y / (paddle->rect.height / 2.f), -1.f, 1.f);
@@ -309,7 +389,7 @@ void draw_game(const GameState *game) {
 
     ClearBackground(BG_COLOR);
 
-    DrawFPS(FPS_POS_X, FPS_POS_Y);
+    DrawFPS(FPS_POS.x, FPS_POS.y);
 
     DrawRectangleRec(game->left_paddle.rect, game->left_paddle.color);
     DrawRectangleRec(game->right_paddle.rect, game->right_paddle.color);
@@ -325,14 +405,14 @@ void draw_game(const GameState *game) {
 void draw_scores(const GameState *game) {
     DrawText(
         TextFormat("%d", game->left_player_score),
-        SCORES_TEXT_LEFT_POS_X, SCORES_TEXT_LEFT_POS_Y,
+        SCORES_TEXT_LEFT_POS.x, SCORES_TEXT_LEFT_POS.y,
         SCORES_TEXT_FONT_SIZE,
         SCORES_TEXT_COLOR
     );
 
     DrawText(
         TextFormat("%d", game->right_player_score),
-        SCORES_TEXT_RIGHT_POS_X, SCORES_TEXT_RIGHT_POS_Y,
+        SCORES_TEXT_RIGHT_POS.x, SCORES_TEXT_RIGHT_POS.y,
         SCORES_TEXT_FONT_SIZE,
         SCORES_TEXT_COLOR
     );
@@ -340,44 +420,50 @@ void draw_scores(const GameState *game) {
 
 void draw_dash_line(void) {
     for (float y = 0; y < SCREEN_HEIGHT; y += DASH_LINE_HEIGHT + DASH_LINE_GAP_HEIGHT) {
-        const float CUR_DASH_HEIGHT = ((y + DASH_LINE_HEIGHT) > SCREEN_HEIGHT) ? (SCREEN_HEIGHT - y) : DASH_LINE_HEIGHT;
-        DrawLine(DASH_LINE_CENTER_X, y, DASH_LINE_CENTER_X, y + CUR_DASH_HEIGHT, DASH_LINE_COLOR);
+        const float CUR_DASH_HEIGHT = (y + DASH_LINE_HEIGHT) > SCREEN_HEIGHT ? (SCREEN_HEIGHT - y) : DASH_LINE_HEIGHT;
+        DrawLine(
+            DASH_LINE_CENTER_X, y,
+            DASH_LINE_CENTER_X, y + CUR_DASH_HEIGHT,
+            DASH_LINE_COLOR
+        );
     }
 }
 
-void draw_menu(void) {
+void draw_main_menu(void) {
+    static const int count = sizeof(main_menu) / sizeof(main_menu[0]);
+
     BeginDrawing();
+
     ClearBackground(BG_COLOR);
 
-    const char *title = "Ping Pong V2";
-    const char *instruction1 = "Press ENTER to start game";
-    const char *instruction2 = "Press H for Help";
-
-    int titleWidth = MeasureText(title, 60);
-    int instr1Width = MeasureText(instruction1, 40);
-    int instr2Width = MeasureText(instruction2, 40);
-
-    DrawText(title, SCREEN_WIDTH / 2 - titleWidth / 2, SCREEN_HEIGHT / 2 - 150, 60, WHITE);
-    DrawText(instruction1, SCREEN_WIDTH / 2 - instr1Width / 2, SCREEN_HEIGHT / 2 - 50, 40, WHITE);
-    DrawText(instruction2, SCREEN_WIDTH / 2 - instr2Width / 2, SCREEN_HEIGHT / 2 + 10, 40, WHITE);
-
+    for (int i = 0; i < count; ++i) {
+        DrawText(
+            main_menu[i].text,
+            main_menu[i].pos.x,
+            main_menu[i].pos.y,
+            main_menu[i].font_size,
+            main_menu[i].color
+        );
+    }
     EndDrawing();
 }
 
-void draw_help(void) {
+void draw_help_menu(void) {
+    static const int count = sizeof(help_menu) / sizeof(help_menu[0]);
+
     BeginDrawing();
+
     ClearBackground(BG_COLOR);
 
-    const char *header = "Help";
-    const char *controls = "Controls:\n"
-                           "  W/S - Move left paddle\n"
-                           "  UP/DOWN - Move right paddle\n"
-                           "  SPACE - Serve the ball\n\n"
-                           "Press ESC or BACKSPACE to return to menu";
-
-    int headerWidth = MeasureText(header, 50);
-    DrawText(header, SCREEN_WIDTH / 2 - headerWidth / 2, 100, 50, WHITE);
-    DrawText(controls, SCREEN_WIDTH / 2 - 300, 200, 30, WHITE);
+    for (int i = 0; i < count; ++i) {
+        DrawText(
+            help_menu[i].text,
+            help_menu[i].pos.x,
+            help_menu[i].pos.y,
+            help_menu[i].font_size,
+            help_menu[i].color
+        );
+    }
 
     EndDrawing();
 }
