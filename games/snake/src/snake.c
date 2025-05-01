@@ -4,8 +4,6 @@
 
 static void init_cells(snake_cell_t **cells, int len, int cap, float cell_size, Vector2 screen_res, Color cell_color);
 
-static void snake_unput(snake_t *snake);
-
 static void snake_move(snake_t *snake, float dt);
 
 void snake_init(
@@ -34,8 +32,19 @@ void snake_destroy(snake_t *snake) {
     free(snake->cells);
 }
 
+void snake_input(snake_t *snake) {
+    if (IsKeyDown(KEY_UP) && snake->dir != SNAKE_DOWN) {
+        snake->dir = SNAKE_UP;
+    } else if (IsKeyDown(KEY_DOWN) && snake->dir != SNAKE_UP) {
+        snake->dir = SNAKE_DOWN;
+    } else if (IsKeyDown(KEY_LEFT) && snake->dir != SNAKE_RIGHT) {
+        snake->dir = SNAKE_LEFT;
+    } else if (IsKeyDown(KEY_RIGHT) && snake->dir != SNAKE_LEFT) {
+        snake->dir = SNAKE_RIGHT;
+    }
+}
+
 void snake_update(snake_t *snake, float dt) {
-    snake_unput(snake);
     snake_move(snake, dt);
 }
 
@@ -95,18 +104,6 @@ static void init_cells(snake_cell_t **cells, int len, int cap, float cell_size, 
         const float xi = (mid_cell_x - i) * cell_size;
         const float yi = mid_cell_y * cell_size;
         (*cells)[i] = (snake_cell_t){(Vector2){xi, yi}, cell_color};
-    }
-}
-
-static void snake_unput(snake_t *snake) {
-    if (IsKeyDown(KEY_UP) && snake->dir != SNAKE_DOWN) {
-        snake->dir = SNAKE_UP;
-    } else if (IsKeyDown(KEY_DOWN) && snake->dir != SNAKE_UP) {
-        snake->dir = SNAKE_DOWN;
-    } else if (IsKeyDown(KEY_LEFT) && snake->dir != SNAKE_RIGHT) {
-        snake->dir = SNAKE_LEFT;
-    } else if (IsKeyDown(KEY_RIGHT) && snake->dir != SNAKE_LEFT) {
-        snake->dir = SNAKE_RIGHT;
     }
 }
 

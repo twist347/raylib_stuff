@@ -42,6 +42,8 @@ void snake_init(
 
 void snake_destroy(snake_t *snake);
 
+void snake_input(snake_t *snake);
+
 void snake_update(snake_t *snake, float dt);
 
 void snake_render(const snake_t *snake);

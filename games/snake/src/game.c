@@ -73,6 +73,59 @@ void game_init(game_t *game) {
     game->state = STATE_PLAYING;
 }
 
+void game_destroy(game_t *game) {
+    snake_destroy(&game->snake);
+    sound_destroy_all(game->sounds);
+    CloseAudioDevice();
+    CloseWindow();
+}
+
+void game_input(game_t *game) {
+    if (try_toggle_pause(game)) {
+        return;
+    }
+    switch (game->state) {
+        case STATE_PLAYING:
+            snake_input(&game->snake);
+            break;
+        case STATE_GAME_OVER:
+            if (IsKeyPressed(KEY_ENTER)) {
+                game_reset(game);
+            }
+            break;
+        case STATE_PAUSED:
+            break;
+    }
+}
+
+void game_update(game_t *game, float dt) {
+    switch (game->state) {
+        case STATE_PLAYING:
+            update_game_play(game, dt);
+            break;
+        case STATE_PAUSED:
+        case STATE_GAME_OVER:
+            break;
+    }
+}
+
+void game_render(const game_t *game) {
+    BeginDrawing();
+
+    ClearBackground(game->screen_settings.bg_color);
+
+    if (game->state != STATE_GAME_OVER) {
+        render_game_play(game);
+    }
+    if (game->state == STATE_PAUSED) {
+        screen_pause_render(&game->pause_screen);
+    } else if (game->state == STATE_GAME_OVER) {
+        screen_game_over_render(&game->game_over_screen, game->score);
+    }
+
+    EndDrawing();
+}
+
 void game_reset(game_t *game) {
     snake_destroy(&game->snake);
 
@@ -93,48 +146,6 @@ void game_reset(game_t *game) {
     game->score = 0;
     game->running = true;
     game->state = STATE_PLAYING;
-}
-
-void game_destroy(game_t *game) {
-    snake_destroy(&game->snake);
-    sound_destroy_all(game->sounds);
-    CloseAudioDevice();
-    CloseWindow();
-}
-
-void game_update(game_t *game, float dt) {
-    try_toggle_pause(game);
-
-    switch (game->state) {
-        case STATE_PLAYING:
-            update_game_play(game, dt);
-            break;
-        case STATE_PAUSED:
-            // nothing to do
-            break;
-        case STATE_GAME_OVER:
-            if (IsKeyPressed(KEY_ENTER)) {
-                game_reset(game);
-            }
-            break;
-    }
-}
-
-void game_render(const game_t *game) {
-    BeginDrawing();
-
-    ClearBackground(game->screen_settings.bg_color);
-
-    if (game->state != STATE_GAME_OVER) {
-        render_game_play(game);
-    }
-    if (game->state == STATE_PAUSED) {
-        screen_pause_render(&game->pause_screen);
-    } else if (game->state == STATE_GAME_OVER) {
-        screen_game_over_render(&game->game_over_screen, game->score);
-    }
-
-    EndDrawing();
 }
 
 static bool check_snake_cell_food_collision(const snake_cell_t *cell, float cell_size, const food_t *food) {

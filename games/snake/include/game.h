@@ -34,12 +34,14 @@ typedef struct {
 
 void game_init(game_t *game);
 
-void game_reset(game_t *game);
-
 void game_destroy(game_t *game);
+
+void game_input(game_t *game);
 
 void game_update(game_t *game, float dt);
 
 void game_render(const game_t *game);
+
+void game_reset(game_t *game);
 
 #endif //GAME_H

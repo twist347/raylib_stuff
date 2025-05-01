@@ -6,6 +6,7 @@ int main() {
 
     while (!WindowShouldClose()) {
         const float dt = GetFrameTime();
+        game_input(&game);
         game_update(&game, dt);
         game_render(&game);
     }
