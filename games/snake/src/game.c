@@ -5,8 +5,11 @@
 #include "config_data.h"
 #include "utils.h"
 #include "screen.h"
+#include "collisions.h"
 
-static bool check_snake_cell_food_collision(const snake_cell_t *cell, float cell_size, const food_t *food);
+static void init_snake_and_food(game_t *game);
+
+static void game_reset(game_t *game);
 
 static bool snake_eat_food(const snake_t *snake, const food_t *food);
 
@@ -36,25 +39,8 @@ void game_init(game_t *game) {
     InitAudioDevice();
     sound_init_all(game->sounds, SOUNDS_NAMES);
 
-    snake_init(
-        &game->snake,
-        SNAKE_INIT_SIZE,
-        SNAKE_INIT_CAP,
-        game->cell_size,
-        SNAKE_SPEED,
-        SNAKE_SPEED_FACTOR,
-        SNAKE_HEAD_COLOR,
-        SNAKE_CELL_COLOR,
-        game->screen_settings.res
-    );
+    init_snake_and_food(game);
 
-    food_init(&game->food, game->screen_settings.res, game->cell_size, FOOD_COLOR);
-
-    while (food_on_snake(&game->food, &game->snake)) {
-        food_spawn(&game->food, game->screen_settings.res, game->cell_size);
-    }
-
-    game->score = 0;
     game->state = STATE_PLAYING;
 }
 
@@ -124,9 +110,7 @@ void game_render(const game_t *game) {
     EndDrawing();
 }
 
-void game_reset(game_t *game) {
-    snake_destroy(&game->snake);
-
+static void init_snake_and_food(game_t *game) {
     snake_init(
         &game->snake,
         SNAKE_INIT_SIZE,
@@ -141,24 +125,27 @@ void game_reset(game_t *game) {
 
     food_init(&game->food, game->screen_settings.res, game->cell_size, FOOD_COLOR);
 
+    while (food_on_snake(&game->food, &game->snake)) {
+        food_spawn(&game->food, game->screen_settings.res, game->cell_size);
+    }
+
     game->score = 0;
+    game->food.last_score_timer = 0.0f;
+}
+
+static void game_reset(game_t *game) {
+    snake_destroy(&game->snake);
+    init_snake_and_food(game);
     game->state = STATE_PLAYING;
 }
 
-static bool check_snake_cell_food_collision(const snake_cell_t *cell, float cell_size, const food_t *food) {
-    return CheckCollisionPointRec(
-        (Vector2){cell->pos.x + cell_size / 2.f, cell->pos.y + cell_size / 2.f},
-        (Rectangle){food->pos.x, food->pos.y, cell_size, cell_size}
-    );
-}
-
 static bool snake_eat_food(const snake_t *snake, const food_t *food) {
-    return check_snake_cell_food_collision(&snake->cells[0], snake->cell_size, food);
+    return collisions_check_snake_cell_food(&snake->cells[0], snake->cell_size, food);
 }
 
 static bool food_on_snake(const food_t *food, const snake_t *snake) {
     for (int i = 0; i < snake->len; ++i) {
-        if (check_snake_cell_food_collision(&snake->cells[i], snake->cell_size, food)) {
+        if (collisions_check_snake_cell_food(&snake->cells[i], snake->cell_size, food)) {
             return true;
         }
     }
@@ -171,14 +158,13 @@ static void render_game_play(const game_t *game) {
     food_render(&game->food, game->cell_size);
     hud_render(&game->hud, game->score);
 
-    if (game->food.last_score_timer > 0.0f) {
-        food_render_pop_up_score(
-            game->food.last_score_pos,
-            game->food.last_score,
-            game->hud.score_font_size,
-            game->hud.score_color
-        );
-    }
+    food_render_pop_up_score(
+        game->food.last_score_pos,
+        game->food.last_score,
+        game->hud.score_font_size,
+        game->hud.score_color,
+        game->food.last_score_timer
+    );
 }
 
 static void update_game_play(game_t *game, float dt) {
@@ -198,10 +184,10 @@ static void update_game_play(game_t *game, float dt) {
         game->score += cost;
         game->food.last_score = cost;
         game->food.last_score_pos = game->food.pos;
-        game->food.last_score_timer = 1.f; // 1 sec
         do {
             food_spawn(&game->food, game->screen_settings.res, game->cell_size);
         } while (food_on_snake(&game->food, &game->snake));
+        game->food.last_score_timer = 1.f; // 1 sec
 
         snake_grow_speed(&game->snake);
     }

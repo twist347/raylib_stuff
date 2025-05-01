@@ -64,8 +64,10 @@ void food_timer_update(food_t *food, float dt) {
     food->last_score_timer = fmaxf(0.0f, food->last_score_timer - dt);
 }
 
-void food_render_pop_up_score(Vector2 pos, int score, int font_size, Color color) {
-    const char *text = TextFormat("+%d", score);
-    const int text_width = MeasureText(text, font_size);
-    DrawText(text, pos.x + text_width, pos.y - font_size - 5, font_size, color);
+void food_render_pop_up_score(Vector2 pos, int score, int font_size, Color color, float timer) {
+    if (timer > 0.0f) {
+        const char *text = TextFormat("+%d", score);
+        const int text_width = MeasureText(text, font_size);
+        DrawText(text, pos.x + text_width, pos.y - font_size - 5, font_size, color);
+    }
 }

@@ -40,6 +40,6 @@ int food_get_cost(const food_t *food);
 
 void food_timer_update(food_t *food, float dt);
 
-void food_render_pop_up_score(Vector2 pos, int score, int font_size, Color color);
+void food_render_pop_up_score(Vector2 pos, int score, int font_size, Color color, float timer);
 
 #endif //FOOD_H

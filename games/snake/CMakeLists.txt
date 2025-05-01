@@ -6,8 +6,6 @@ project(${T})
 
 set(ASSETS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/assets)
 
-message(${CMAKE_CURRENT_SOURCE_DIR})
-
 include_directories(include)
 
 add_executable(${T}
@@ -18,6 +16,7 @@ add_executable(${T}
     src/hud.c
     src/audio.c
     src/utils.c
+    src/collisions.c
     src/screen.c
     src/snake.c
     src/food.c

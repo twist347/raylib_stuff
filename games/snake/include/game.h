@@ -1,8 +1,6 @@
 #ifndef GAME_H
 #define GAME_H
 
-#include <stdbool.h>
-
 #include "screen_settings.h"
 #include "markings.h"
 #include "hud.h"
@@ -15,6 +13,8 @@ typedef enum {
     STATE_PAUSED = 1,
     STATE_GAME_OVER
 } game_state_e;
+
+// TODO: merge all settings to one structure (screen_settings_t, markings_t, hud_t, maybe menus)
 
 typedef struct {
     screen_settings_t screen_settings;
@@ -37,7 +37,5 @@ void game_input(game_t *game);
 void game_update(game_t *game, float dt);
 
 void game_render(const game_t *game);
-
-void game_reset(game_t *game);
 
 #endif //GAME_H
