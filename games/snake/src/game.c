@@ -51,18 +51,16 @@ void game_init(game_t *game) {
     food_init(&game->food, game->screen_settings.res, game->cell_size, FOOD_COLOR);
 
     while (food_on_snake(&game->food, &game->snake)) {
-        food_spawn(&game->food, game->screen_settings.res);
+        food_spawn(&game->food, game->screen_settings.res, game->cell_size);
     }
 
     game->score = 0;
-    game->running = true;
     game->state = STATE_PLAYING;
 }
 
 void game_destroy(game_t *game) {
     snake_destroy(&game->snake);
     sound_destroy_all(game->sounds);
-    game->running = false;
     CloseAudioDevice();
     CloseWindow();
 }
@@ -144,7 +142,6 @@ void game_reset(game_t *game) {
     food_init(&game->food, game->screen_settings.res, game->cell_size, FOOD_COLOR);
 
     game->score = 0;
-    game->running = true;
     game->state = STATE_PLAYING;
 }
 
@@ -171,15 +168,25 @@ static bool food_on_snake(const food_t *food, const snake_t *snake) {
 static void render_game_play(const game_t *game) {
     markings_render(&game->markings, game->screen_settings.res, game->cell_size);
     snake_render(&game->snake);
-    food_render(&game->food);
+    food_render(&game->food, game->cell_size);
     hud_render(&game->hud, game->score);
+
+    if (game->food.last_score_timer > 0.0f) {
+        food_render_pop_up_score(
+            game->food.last_score_pos,
+            game->food.last_score,
+            game->hud.score_font_size,
+            game->hud.score_color
+        );
+    }
 }
 
 static void update_game_play(game_t *game, float dt) {
     snake_update(&game->snake, dt);
 
     // TODO: maybe place snake_check_self_collision and snake_check_self_collision into snake_update
-    if (snake_check_self_collision(&game->snake) || snake_check_walls_collision(&game->snake, game->screen_settings.res)) {
+    if (snake_check_self_collision(&game->snake) ||
+        snake_check_walls_collision(&game->snake, game->screen_settings.res)) {
         game->state = STATE_GAME_OVER;
         return;
     }
@@ -187,14 +194,18 @@ static void update_game_play(game_t *game, float dt) {
     if (snake_eat_food(&game->snake, &game->food)) {
         PlaySound(game->sounds[SOUND_BITE]);
         snake_grow(&game->snake);
-        ++game->score;
-
+        const int cost = food_get_cost(&game->food);
+        game->score += cost;
+        game->food.last_score = cost;
+        game->food.last_score_pos = game->food.pos;
+        game->food.last_score_timer = 1.f; // 1 sec
         do {
-            food_spawn(&game->food, game->screen_settings.res);
+            food_spawn(&game->food, game->screen_settings.res, game->cell_size);
         } while (food_on_snake(&game->food, &game->snake));
 
         snake_grow_speed(&game->snake);
     }
+    food_timer_update(&game->food, dt);
 }
 
 static bool try_toggle_pause(game_t *game) {

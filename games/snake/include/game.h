@@ -25,7 +25,6 @@ typedef struct {
     snake_t snake;
     food_t food;
     int score;
-    bool running;
     game_state_e state;
 } game_t;
 
