@@ -7,4 +7,6 @@
 
 #define VEC2_MAKE(x, y) ((Vector2){(x), (y)})
 
+char *str_concat(const char *s1, const char *s2);
+
 #endif //UTILS_H

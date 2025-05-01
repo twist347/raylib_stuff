@@ -3,6 +3,21 @@
 
 #include "raylib.h"
 
-void hud_render(int score, Vector2 score_pos, int score_font_size, Color score_color, Vector2 fps_pos);
+typedef struct {
+    Vector2 fps_pos;
+    Vector2 score_pos;
+    int score_font_size;
+    Color score_color;
+} hud_t;
+
+void hud_init(
+    hud_t *hud,
+    Vector2 fps_pos,
+    Vector2 score_pos,
+    int score_font_size,
+    Color score_color
+);
+
+void hud_render(const hud_t *hud, int score);
 
 #endif //HUD_H

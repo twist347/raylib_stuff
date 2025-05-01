@@ -1,12 +1,10 @@
 #include "game.h"
 
-#include "stdio.h"
-
 int main() {
     game_t game;
     game_init(&game);
 
-    while (!WindowShouldClose() && game.running) {
+    while (!WindowShouldClose()) {
         const float dt = GetFrameTime();
         game_update(&game, dt);
         game_render(&game);
