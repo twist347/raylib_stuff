@@ -16,13 +16,11 @@
 // pause screen settings
 #define PAUSE_SCREEN_TITLES        (const char *[]){"PAUSED", "Press P to resume"}
 #define PAUSE_SCREEN_FONT_SIZES    (int []){80, 50}
-#define PAUSE_SCREEN_GAP           50.f
 #define PAUSE_SCREEN_TEXT_COLORS   (Color []){YELLOW, WHITE}
 
 // game over screen settings
 #define GAME_OVER_SCREEN_TITLES        (const char *[]){"GAME OVER", "Final score", "Press ENTER to restart", "Press Esc to Exit"}
 #define GAME_OVER_SCREEN_FONT_SIZES    (int []){80, 50, 50, 50}
-#define GAME_OVER_SCREEN_GAP           50.f
 #define GAME_OVER_SCREEN_TEXT_COLORS   (Color []){RED, WHITE, WHITE, WHITE}
 
 // markings settings

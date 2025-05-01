@@ -3,7 +3,6 @@
 
 #include <stdbool.h>
 
-#include "screen.h"
 #include "screen_settings.h"
 #include "markings.h"
 #include "hud.h"
@@ -19,8 +18,6 @@ typedef enum {
 
 typedef struct {
     screen_settings_t screen_settings;
-    pause_screen_t pause_screen;
-    game_over_screen_t game_over_screen;
     markings_t markings;
     float cell_size;
     hud_t hud;

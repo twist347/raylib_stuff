@@ -20,20 +20,6 @@ static bool try_toggle_pause(game_t *game);
 
 void game_init(game_t *game) {
     screen_settings_init(&game->screen_settings, SCREEN_RES, FPS, TITLE, BG_COLOR);
-    screen_pause_init(
-        &game->pause_screen,
-        game->screen_settings.res,
-        PAUSE_SCREEN_TITLES,
-        PAUSE_SCREEN_FONT_SIZES,
-        PAUSE_SCREEN_TEXT_COLORS
-    );
-    screen_game_over_init(
-        &game->game_over_screen,
-        game->screen_settings.res,
-        GAME_OVER_SCREEN_TITLES,
-        GAME_OVER_SCREEN_FONT_SIZES,
-        GAME_OVER_SCREEN_TEXT_COLORS
-    );
 
     InitWindow(VEC2_SPLIT(game->screen_settings.res), game->screen_settings.title);
     SetTargetFPS(game->screen_settings.fps);
@@ -76,6 +62,7 @@ void game_init(game_t *game) {
 void game_destroy(game_t *game) {
     snake_destroy(&game->snake);
     sound_destroy_all(game->sounds);
+    game->running = false;
     CloseAudioDevice();
     CloseWindow();
 }
@@ -118,9 +105,22 @@ void game_render(const game_t *game) {
         render_game_play(game);
     }
     if (game->state == STATE_PAUSED) {
-        screen_pause_render(&game->pause_screen);
+        screen_pause_render(
+            ARR_LEN(PAUSE_SCREEN_TITLES),
+            PAUSE_SCREEN_TITLES,
+            game->screen_settings.res,
+            PAUSE_SCREEN_FONT_SIZES,
+            PAUSE_SCREEN_TEXT_COLORS
+        );
     } else if (game->state == STATE_GAME_OVER) {
-        screen_game_over_render(&game->game_over_screen, game->score);
+        screen_game_over_render(
+            game->score,
+            ARR_LEN(GAME_OVER_SCREEN_TITLES),
+            GAME_OVER_SCREEN_TITLES,
+            game->screen_settings.res,
+            GAME_OVER_SCREEN_FONT_SIZES,
+            GAME_OVER_SCREEN_TEXT_COLORS
+        );
     }
 
     EndDrawing();
