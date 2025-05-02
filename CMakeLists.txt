@@ -13,3 +13,4 @@ include_directories(${RAYLIB_DIR}/include)
 link_directories(${RAYLIB_DIR}/lib)
 
 add_subdirectory(${GAMES_DIR}/snake)
+add_subdirectory(${GAMES_DIR}/arkanoid)
