@@ -12,6 +12,7 @@ add_executable(${T}
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ball.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/brick.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/collisions.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/hud.c
 )
 
 target_include_directories(${T} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)

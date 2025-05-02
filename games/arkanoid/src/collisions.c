@@ -18,38 +18,22 @@ void collisions_handle_paddle_ball(const paddle_t *paddle, ball_t *ball) {
     ball->velocity.y = -speed * cosf(angle);
 }
 
-bool collisions_brick_ball(const brick_t *brick, ball_t *ball) {
-    // nearest to ball center point on brick
-    const Vector2 nearest = {
-        fmax(brick->rect.x, fmin(ball->center_pos.x, brick->rect.x + brick->rect.width)),
-        fmax(brick->rect.y, fmin(ball->center_pos.y, brick->rect.y + brick->rect.height))
-    };
+void collisions_handle_brick_ball(const brick_t *brick, ball_t *ball) {
+    // TODO: pop ball out of brick
+    // closest point
+    const float closest_x = fmaxf(brick->rect.x, fminf(ball->center_pos.x, brick->rect.x + brick->rect.width));
+    const float closest_y = fmaxf(brick->rect.y, fminf(ball->center_pos.y, brick->rect.y + brick->rect.height));
 
-    // vector from nearest to ball center
-    const Vector2 delta = {ball->center_pos.x - nearest.x, ball->center_pos.y - nearest.y};
+    // vector from closest point to ball center
+    const float dx = ball->center_pos.x - closest_x;
+    const float dy = ball->center_pos.y - closest_y;
 
-    const float dist2 = delta.x * delta.x + delta.y * delta.y;
-    if (dist2 < ball->radius * ball->radius) {
-        // hor or vert collision
-        if (fabs(delta.x) > fabs(delta.y)) {
-            ball->velocity.x *= -1;
-        } else {
-            ball->velocity.y *= -1;
-        }
-
-        // slightly pop out ball (prevent sticking in brick)
-        const float dist = sqrt(dist2);
-        const float overlap = ball->radius - dist;
-        if (dist != 0) {
-            const Vector2 norm = {delta.x / dist, delta.y / dist};
-            ball->center_pos.x += norm.x * overlap;
-            ball->center_pos.y += norm.y * overlap;
-        } else {
-            ball->center_pos.y -= overlap;
-        }
-        return true;
+    // calc the side of collision
+    if (fabsf(dx) > fabsf(dy)) {
+        ball->velocity.x *= -1.f;
+    } else {
+        ball->velocity.y *= -1.f;
     }
-    return false;
 }
 
 static float get_reflection_angle(const paddle_t *paddle, Vector2 ball_center) {

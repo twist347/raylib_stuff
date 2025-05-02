@@ -25,7 +25,10 @@
 #define BRICK_MARGIN       5.f
 #define BRICKS_LINES       5
 #define BRICKS_PER_LINE    8
-// #define BRICK_SIDES        (Vector2){SCREEN_RES.x / BRICKS_PER_LINE, 40.f}
 #define BRICK_COLOR        YELLOW
+
+// hud settings
+#define HUD_TEXT_COLOR        GREEN
+#define HUD_TEXT_FONT_SIZE    20
 
 #endif //CONFIG_DATA_H

@@ -3,15 +3,18 @@
 #include "collisions.h"
 
 #include <stdlib.h>
+#include <math.h>
 
 static void helper_bricks_init(game_t *game);
 static void helper_bricks_render(const brick_t *bricks, int count);
 static void helper_handle_ball_bricks_collision(brick_t *bricks, int count, ball_t *ball);
+static void helper_reset_ball_and_paddle(game_t *game);
 
 game_t *game_init() {
     game_t *game = malloc(sizeof(game_t));
 
     screen_settings_init(&game->screen_settings, SCREEN_RES, SCREEN_TITLE, FPS, BG_COLOR);
+    hud_init(&game->hud, game->screen_settings.res, HUD_TEXT_FONT_SIZE, HUD_TEXT_COLOR);
     paddle_init(
         &game->paddle,
         (Rectangle){.x = PADDLE_INIT_POS.x, .y = PADDLE_INIT_POS.y, .width = PADDLE_SIDES.x, .height = PADDLE_SIDES.y},
@@ -25,6 +28,7 @@ game_t *game_init() {
     InitWindow(game->screen_settings.res.x, game->screen_settings.res.y, game->screen_settings.title);
     SetTargetFPS(game->screen_settings.fps);
 
+    game->lives = 3;
     game->active = true;
 
     return game;
@@ -47,7 +51,12 @@ void game_update(game_t *game, float dt) {
     ball_handle_wall_collision(&game->ball, game->screen_settings.res);
     collisions_handle_paddle_ball(&game->paddle, &game->ball);
     if (ball_check_bottom_collision(&game->ball, game->screen_settings.res.y)) {
-        game->active = false;
+        --game->lives;
+        if (game->lives > 0) {
+            helper_reset_ball_and_paddle(game);
+        } else {
+            game->active = false;
+        }
     }
     helper_handle_ball_bricks_collision(game->bricks, game->bricks_count, &game->ball);
 }
@@ -60,8 +69,7 @@ void game_render(const game_t *game) {
     paddle_render(&game->paddle);
     ball_render(&game->ball);
     helper_bricks_render(game->bricks, game->bricks_count);
-
-    DrawFPS(10, 10);
+    hud_render(&game->hud, game->lives);
 
     EndDrawing();
 }
@@ -100,8 +108,18 @@ static void helper_handle_ball_bricks_collision(brick_t *bricks, int count, ball
         brick_t *brick = &bricks[i];
         if (brick->active && CheckCollisionCircleRec(ball->center_pos, ball->radius, brick->rect)) {
             brick->active = false;
-            ball->velocity.y *= -1.f;
+            collisions_handle_brick_ball(brick, ball);
             break;
         }
     }
+}
+
+static void helper_reset_ball_and_paddle(game_t *game) {
+    paddle_init(
+        &game->paddle,
+        (Rectangle){.x = PADDLE_INIT_POS.x, .y = PADDLE_INIT_POS.y, .width = PADDLE_SIDES.x, .height = PADDLE_SIDES.y},
+        PADDLE_VELOCITY,
+        PADDLE_COLOR
+    );
+    ball_init(&game->ball, BALL_INIT_POS, BALL_RADIUS, BALL_VELOCITY, BALL_COLOR);
 }
