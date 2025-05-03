@@ -14,6 +14,7 @@ add_executable(${T}
     ${CMAKE_CURRENT_SOURCE_DIR}/src/collisions.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/hud.c
     ${CMAKE_CURRENT_SOURCE_DIR}/src/ui.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/map_generator.c
 )
 
 target_include_directories(${T} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)

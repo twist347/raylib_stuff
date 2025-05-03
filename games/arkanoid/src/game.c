@@ -2,11 +2,12 @@
 #include "config_data.h"
 #include "collisions.h"
 #include "ui.h"
+#include "map_generator.h"
+#include "maps.h"
 
 #include <stdlib.h>
 #include <assert.h>
 
-static void helper_bricks_init(brick_t *bricks);
 static void helper_bricks_render(const brick_t *bricks, int count);
 static void helper_handle_ball_bricks_collision(brick_t *bricks, int count, int *cur_count, ball_t *ball);
 static void helper_reset_ball_and_paddle(game_t *game);
@@ -24,11 +25,18 @@ game_t *game_init() {
     hud_init(&game->hud, game->screen_settings.res, HUD_TEXT_FONT_SIZE, HUD_TEXT_COLOR);
     helper_reset_ball_and_paddle(game);
 
-    game->bricks_count = BRICKS_LINES * BRICKS_PER_LINE;
-    game->bricks_cur_count = game->bricks_count;
-    // TODO: handle malloc
+    game->bricks_count = map_generator_count_active_bricks(MAP1, BRICKS_LINES, BRICKS_PER_LINE);
+    game->bricks_cur_count = game->bricks_cur_count;
     brick_t *bricks = malloc(game->bricks_count * sizeof(brick_t));
-    helper_bricks_init(bricks);
+    map_generator_gen_bricks_from_map(
+        bricks,
+        MAP1,
+        BRICKS_LINES, BRICKS_PER_LINE,
+        game->screen_settings.res,
+        BRICK_WIDTH,
+        BRICK_MARGIN,
+        BRICK_COLOR
+    );
     game->bricks = bricks;
 
     assert(game);
@@ -41,7 +49,7 @@ game_t *game_init() {
 }
 
 void game_destroy(game_t *game) {
-    free(game->bricks);
+    map_generator_free(game->bricks);
     free(game);
     CloseWindow();
 }
@@ -100,25 +108,6 @@ void game_render(const game_t *game) {
     EndDrawing();
 }
 
-static void helper_bricks_init(brick_t *bricks) {
-    const Vector2 brick_sides = {
-        (SCREEN_RES.x - BRICK_MARGIN * (BRICKS_PER_LINE + 1)) / BRICKS_PER_LINE,
-        BRICK_WIDTH
-    };
-    for (int i = 0; i < BRICKS_LINES; ++i) {
-        for (int j = 0; j < BRICKS_PER_LINE; ++j) {
-            const int idx = i * BRICKS_PER_LINE + j;
-            const Rectangle rect = {
-                BRICK_MARGIN + j * (brick_sides.x + BRICK_MARGIN),
-                BRICK_MARGIN + i * (brick_sides.y + BRICK_MARGIN),
-                brick_sides.x - BRICK_MARGIN,
-                brick_sides.y - BRICK_MARGIN,
-            };
-            brick_init(&bricks[idx], rect, true, BRICK_COLOR);
-        }
-    }
-}
-
 static void helper_bricks_render(const brick_t *bricks, int count) {
     for (int i = 0; i < count; ++i) {
         const brick_t *brick = &bricks[i];
@@ -163,7 +152,15 @@ static void helper_handle_game_over(game_t *game) {
 
 static void helper_game_reset(game_t *game) {
     helper_reset_ball_and_paddle(game);
-    helper_bricks_init(game->bricks);
+    map_generator_gen_bricks_from_map(
+        game->bricks,
+        MAP1,
+        BRICKS_LINES, BRICKS_PER_LINE,
+        game->screen_settings.res,
+        BRICK_WIDTH,
+        BRICK_MARGIN,
+        BRICK_COLOR
+    );
     game->lives = PLAYER_LIVES;
     game->state = GAME_STATE_PLAY;
 }
