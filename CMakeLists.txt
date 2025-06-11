@@ -15,3 +15,5 @@ link_directories(${RAYLIB_DIR}/lib)
 add_subdirectory(${GAMES_DIR}/snake)
 add_subdirectory(${GAMES_DIR}/arkanoid)
 add_subdirectory(${GAMES_DIR}/platformer)
+
+add_subdirectory(${GAMES_DIR}/ecs/ping_pong_ecs)
