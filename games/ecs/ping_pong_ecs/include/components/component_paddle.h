@@ -4,7 +4,7 @@
 typedef struct {
     float width;
     float height;
-    // float init_speed;
+    float init_vel;
 } paddle_c;
 
 #endif //COMPONENT_PADDLE_H

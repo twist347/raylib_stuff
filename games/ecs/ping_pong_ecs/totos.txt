@@ -1,0 +1,2 @@
+1. TODO: rewrite using signal. when player scores he emit signal to transform(?) system to reset position of ball
+2. TODO: add collider component

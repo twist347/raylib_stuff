@@ -4,7 +4,8 @@
 #include "raylib.h"
 
 typedef struct {
-    Vector2 vel;
+    float vel;
+    Vector2 dir; // normalized vector
     // acceleration, mass, is_static etc
 } phys_c;
 

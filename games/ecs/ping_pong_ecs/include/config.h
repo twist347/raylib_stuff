@@ -9,12 +9,13 @@
 #define TARGET_FPS      60
 #define BG_COLOR        BLACK
 
-#define PADDLE_VEL      300.f
-#define PADDLE_SIZE     (Vector2){10.f, 100.f}
-#define PADDLE_COLOR    GREEN
+#define PADDLE_VEL      500.f
+#define PADDLE_SIZE     (Vector2){20.f, 150.f}
+#define PADDLE_COLOR    BLUE
 
-#define BALL_VEL       (Vector2){300.f, 300.f}
-#define BALL_RADIUS    10.f
-#define BALL_COLOR     RED
+#define BALL_VEL          500.f
+#define BALL_RADIUS       15.f
+#define BALL_VEL_SCALE    0.1f
+#define BALL_COLOR        RED
 
-#define HUD_COLOR    WHITE
+#define HUD_COLOR    YELLOW

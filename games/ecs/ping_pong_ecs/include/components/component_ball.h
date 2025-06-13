@@ -3,7 +3,8 @@
 
 typedef struct {
     float radius;
-    float init_speed;
+    float init_vel;
+    float vel_scale;
 } ball_c;
 
 #endif //COMPONENT_BALL_H

@@ -2,11 +2,15 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
+#include <time.h>
+#include <math.h>
 
 #include "raylib.h"
 
 #include "config.h"
 #include "systems/system_all.h"
+
+static Vector2 random_direction(float max_angle_deg, bool to_left);
 
 game_t *game_create() {
     game_t *game = malloc(sizeof(game_t));
@@ -16,6 +20,7 @@ game_t *game_create() {
 
     InitWindow((int) game->screen_res.x, (int) game->screen_res.y, game->window_title);
     SetTargetFPS(TARGET_FPS);
+    srand(time(NULL));
 
     world_create(&game->world);
     return game;
@@ -29,20 +34,20 @@ void game_init(game_t *game) {
     add_transform_c(world, left_paddle, 50.f, sr.y * 0.5f - 50.f);
     add_input_c(world, left_paddle, KEY_W, KEY_S);
     add_render_c(world, left_paddle, PADDLE_COLOR);
-    add_phys_c(world, left_paddle, (Vector2){0.f, PADDLE_VEL});
-    add_paddle_c(world, left_paddle, PADDLE_SIZE.x, PADDLE_SIZE.y);
+    add_phys_c(world, left_paddle, PADDLE_VEL, (Vector2){0.f, 0.f});
+    add_paddle_c(world, left_paddle, PADDLE_SIZE.x, PADDLE_SIZE.y, PADDLE_VEL);
 
     const entity_t right_paddle = entity_create(world);
     add_transform_c(world, right_paddle, sr.x - 60.f, sr.y * 0.5f - 50.f);
     add_render_c(world, right_paddle, PADDLE_COLOR);
     add_input_c(world, right_paddle, KEY_UP, KEY_DOWN);
-    add_phys_c(world, right_paddle, (Vector2){0.f, PADDLE_VEL});
-    add_paddle_c(world, right_paddle, PADDLE_SIZE.x, PADDLE_SIZE.y);
+    add_phys_c(world, right_paddle, PADDLE_VEL, (Vector2){0.f, 0.f});
+    add_paddle_c(world, right_paddle, PADDLE_SIZE.x, PADDLE_SIZE.y, PADDLE_VEL);
 
     const entity_t ball = entity_create(world);
     add_transform_c(world, ball, sr.x * 0.5f, sr.y * 0.5f);
-    add_phys_c(world, ball, BALL_VEL);
-    add_ball_c(world, ball, BALL_RADIUS, BALL_VEL.x);
+    add_phys_c(world, ball, BALL_VEL, random_direction(45.f, true));
+    add_ball_c(world, ball, BALL_RADIUS, BALL_VEL, BALL_VEL_SCALE);
     add_render_c(world, ball, BALL_COLOR);
 
     const entity_t score = entity_create(world);
@@ -78,4 +83,12 @@ void game_destroy(game_t *game) {
     world_destroy(&game->world);
     free(game);
     CloseWindow();
+}
+
+static Vector2 random_direction(float max_angle_deg, bool to_left) {
+    const float max_rad = max_angle_deg * DEG2RAD;
+    const float t = ((float) rand() / (float) RAND_MAX) * 2.0f - 1.0f;
+    const float base = to_left ? (float) M_PI : 0.0f;
+    const float angle = base + t * max_rad;
+    return (Vector2){cosf(angle), sinf(angle)};
 }

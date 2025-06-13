@@ -63,19 +63,19 @@ bool has_render_c(const world_t *world, entity_t id);
 render_c *get_render_c(world_t *world, entity_t id);
 
 // phys funcs
-void add_phys_c(world_t *world, entity_t id, Vector2 vel);
+void add_phys_c(world_t *world, entity_t id, float vel, Vector2 dir);
 void remove_phys_c(world_t *world, entity_t id);
 bool has_phys_c(const world_t *world, entity_t id);
 phys_c *get_phys_c(world_t *world, entity_t id);
 
 // paddle funcs
-void add_paddle_c(world_t *world, entity_t id, float width, float height);
+void add_paddle_c(world_t *world, entity_t id, float width, float height, float init_vel);
 void remove_paddle_c(world_t *world, entity_t id);
 bool has_paddle_c(const world_t *world, entity_t id);
 paddle_c *get_paddle_c(world_t *world, entity_t id);
 
 // ball funcs
-void add_ball_c(world_t *world, entity_t id, float radius, float init_speed);
+void add_ball_c(world_t *world, entity_t id, float radius, float init_vel, float vel_scale);
 void remove_ball_c(world_t *world, entity_t id);
 bool has_ball_c(const world_t *world, entity_t id);
 ball_c *get_ball_c(world_t *world, entity_t id);
