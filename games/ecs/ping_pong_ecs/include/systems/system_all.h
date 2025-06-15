@@ -3,8 +3,10 @@
 
 #include "system_collisions.h"
 #include "system_input.h"
+#include "system_music.h"
 #include "system_render.h"
 #include "system_score.h"
+#include "system_sound.h"
 #include "system_transform.h"
 
 #endif //SYSTEM_ALL_H

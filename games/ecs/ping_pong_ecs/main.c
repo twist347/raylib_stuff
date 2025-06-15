@@ -2,6 +2,7 @@
 
 int main(void) {
     game_t *game = game_create();
+    game_load_resources(game);
     game_init(game);
 
     while (game->running) {
@@ -10,6 +11,7 @@ int main(void) {
         game_render(game);
     }
 
+    game_unload_resources(game);
     game_destroy(game);
     return 0;
 }

@@ -12,7 +12,7 @@ bool has_components_group(const world_t *world, entity_t id, component_mask_t ma
 entity_t find_entity(const world_t *world, component_mask_t mask) {
     assert(world);
 
-    for (entity_t id = 0; id < MAX_ENTITIES; ++id) {
+    for (entity_t id = 0; id < world->entity_count; ++id) {
         if (has_components_group(world, id, mask)) {
             return id;
         }
@@ -305,4 +305,97 @@ score_c *get_score_c(world_t *world, entity_t id) {
     assert(id < MAX_ENTITIES);
 
     return has_score_c(world, id) ? &world->scores[id] : NULL;
+}
+
+// sound funcs
+
+void add_sound_c(world_t *world, entity_t id, assets_sound_id_e assets_sound_id, float volume) {
+    assert(world);
+    assert(world->alive[id]);
+    assert(id < MAX_ENTITIES);
+
+    world->component_mask[id] |= COMPONENT_SOUND;
+    world->sounds[id].slots[assets_sound_id].sound = &world->assets.sfx[assets_sound_id];
+    world->sounds[id].slots[assets_sound_id].volume = volume;
+    world->sounds[id].slots[assets_sound_id].playing = false;
+}
+
+void add_sounds(world_t *world, entity_t id, const sound_info_t *sounds, size_t count) {
+    assert(world);
+    assert(world->alive[id]);
+    assert(id < MAX_ENTITIES);
+
+    world->component_mask[id] |= COMPONENT_SOUND;
+    for (size_t i = 0; i < count; ++i) {
+        world->sounds[id].slots[sounds[i].id].sound = &world->assets.sfx[sounds[i].id];
+        world->sounds[id].slots[sounds[i].id].volume = sounds[i].volume;
+        world->sounds[id].slots[sounds[i].id].playing = false;
+    }
+}
+
+void remove_sound_c(world_t *world, entity_t id) {
+    assert(world);
+    assert(world->alive[id]);
+    assert(id < MAX_ENTITIES);
+
+    world->component_mask[id] &= ~COMPONENT_SOUND;
+}
+
+bool has_sound_c(const world_t *world, entity_t id) {
+    assert(world);
+    assert(id < MAX_ENTITIES);
+
+    return (world->component_mask[id] & COMPONENT_SOUND) != 0u;
+}
+
+sound_c *get_sound_c(world_t *world, entity_t id) {
+    assert(world);
+    assert(world->alive[id]);
+    assert(id < MAX_ENTITIES);
+
+    return has_sound_c(world, id) ? &world->sounds[id] : NULL;
+}
+
+// music funcs
+
+void add_music_c(
+    world_t *world,
+    entity_t id,
+    assets_music_id_e assets_music_id,
+    float volume,
+    bool loop,
+    bool playing
+) {
+    assert(world);
+    assert(world->alive[id]);
+    assert(id < MAX_ENTITIES);
+
+    world->component_mask[id] |= COMPONENT_MUSIC;
+    world->music[id].slots[assets_music_id].music = &world->assets.music[assets_music_id];
+    world->music[id].slots[assets_music_id].volume = volume;
+    world->music[id].slots[assets_music_id].music->looping = loop;
+    world->music[id].slots[assets_music_id].playing = playing;
+}
+
+void remove_music_c(world_t *world, entity_t id) {
+    assert(world);
+    assert(world->alive[id]);
+    assert(id < MAX_ENTITIES);
+
+    world->component_mask[id] &= ~COMPONENT_MUSIC;
+}
+
+bool has_music_c(const world_t *world, entity_t id) {
+    assert(world);
+    assert(id < MAX_ENTITIES);
+
+    return (world->component_mask[id] & COMPONENT_MUSIC) != 0u;
+}
+
+music_c *get_music_c(world_t *world, entity_t id) {
+    assert(world);
+    assert(world->alive[id]);
+    assert(id < MAX_ENTITIES);
+
+    return has_music_c(world, id) ? &world->music[id] : NULL;
 }

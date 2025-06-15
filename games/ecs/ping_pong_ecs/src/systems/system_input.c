@@ -4,7 +4,7 @@ static void handle_paddle_input(const input_c *paddle_input, phys_c *paddle_phys
 
 void system_input(world_t *world) {
     static const component_mask_t paddle_input_m = COMPONENT_PADDLE | COMPONENT_INPUT | COMPONENT_PHYS;
-    for (entity_t id = 0; id < MAX_ENTITIES; ++id) {
+    for (entity_t id = 0; id < world->entity_count; ++id) {
         if (has_components_group(world, id, paddle_input_m)) {
             handle_paddle_input(get_input_c(world, id), get_phys_c(world, id));
         }

@@ -6,41 +6,45 @@
 #include "raymath.h"
 
 static void handle_ball_screen_collision(
-    const ball_c *ball, transform_c *ball_trans, phys_c *ball_phys,
+    const ball_c *ball, transform_c *ball_trans, phys_c *ball_phys, sound_c *ball_sound,
     Vector2 screen_res
 );
 
 static void increase_speed_by_factor(float *vel, float init_vel, float scale_factor);
 
 static void handle_ball_paddle_collision(
-    const ball_c *ball, transform_c *ball_trans, phys_c *ball_phys,
+    const ball_c *ball, transform_c *ball_trans, phys_c *ball_phys, sound_c *ball_sound,
     const paddle_c *paddle, const transform_c *paddle_trans
 );
 
 static void handle_paddle_screen_collision(const paddle_c *paddle, transform_c *paddle_trans, Vector2 screen_res);
 
+static void handle_ball_paddle_sound(sound_c *ball_sound);
+
+static void handle_ball_screen_sound(sound_c *ball_sound);
+
 void system_collisions(world_t *world, Vector2 screen_res) {
-    const entity_t ball_id = find_entity(world, COMPONENT_BALL | COMPONENT_TRANSFORM | COMPONENT_PHYS);
+    const entity_t ball_id = find_entity(world, COMPONENT_BALL | COMPONENT_TRANSFORM | COMPONENT_PHYS | COMPONENT_SOUND);
     assert(ball_id != MAX_ENTITIES);
 
     transform_c *ball_trans = get_transform_c(world, ball_id);
     phys_c *ball_phys = get_phys_c(world, ball_id);
     const ball_c *ball = get_ball_c(world, ball_id);
 
-    handle_ball_screen_collision(ball, ball_trans, ball_phys, screen_res);
+    handle_ball_screen_collision(ball, ball_trans, ball_phys, get_sound_c(world, ball_id), screen_res);
 
     for (entity_t id = 0; id < ball_id; id++) {
         if (has_components_group(world, id, COMPONENT_PADDLE | COMPONENT_TRANSFORM)) {
             transform_c *paddle_trans = get_transform_c(world, id);
             const paddle_c *paddle = get_paddle_c(world, id);
-            handle_ball_paddle_collision(ball, ball_trans, ball_phys, paddle, paddle_trans);
+            handle_ball_paddle_collision(ball, ball_trans, ball_phys,get_sound_c(world, ball_id), paddle, paddle_trans);
             handle_paddle_screen_collision(paddle, paddle_trans, screen_res);
         }
     }
 }
 
 static void handle_ball_screen_collision(
-    const ball_c *ball, transform_c *ball_trans, phys_c *ball_phys,
+    const ball_c *ball, transform_c *ball_trans, phys_c *ball_phys, sound_c *ball_sound,
     Vector2 screen_res
 ) {
     if (ball_trans->y - ball->radius <= 0 ||
@@ -52,6 +56,7 @@ static void handle_ball_screen_collision(
             ball->radius,
             screen_res.y - ball->radius
         );
+        handle_ball_screen_sound(ball_sound);
     }
 }
 
@@ -60,7 +65,7 @@ static void increase_speed_by_factor(float *vel, float init_vel, float scale_fac
 }
 
 static void handle_ball_paddle_collision(
-    const ball_c *ball, transform_c *ball_trans, phys_c *ball_phys,
+    const ball_c *ball, transform_c *ball_trans, phys_c *ball_phys, sound_c *ball_sound,
     const paddle_c *paddle, const transform_c *paddle_trans
 ) {
     static const float max_bounce_angle = 60.f * (DEG2RAD);
@@ -81,9 +86,18 @@ static void handle_ball_paddle_collision(
             ball_trans->x = paddle_trans->x + paddle->width + ball->radius;
         }
         increase_speed_by_factor(&ball_phys->vel, ball->init_vel, ball->vel_scale);
+        handle_ball_paddle_sound(ball_sound);
     }
 }
 
 static void handle_paddle_screen_collision(const paddle_c *paddle, transform_c *paddle_trans, Vector2 screen_res) {
     paddle_trans->y = Clamp(paddle_trans->y, 0, screen_res.y - paddle->height);
+}
+
+static void handle_ball_paddle_sound(sound_c *ball_sound) {
+    ball_sound->slots[ASSETS_SFX_BOUNCE].playing = true;
+}
+
+static void handle_ball_screen_sound(sound_c *ball_sound) {
+    ball_sound->slots[ASSETS_SFX_WALL_HIT].playing = true;
 }

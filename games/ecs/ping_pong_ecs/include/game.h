@@ -13,9 +13,11 @@ typedef struct {
 } game_t;
 
 game_t *game_create();
+void game_load_resources(game_t *game);
 void game_init(game_t *game);
 void game_update(game_t *game, float dt);
 void game_render(game_t *game);
+void game_unload_resources(game_t *game);
 void game_destroy(game_t *game);
 
 #endif

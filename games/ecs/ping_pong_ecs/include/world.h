@@ -2,8 +2,10 @@
 #define WORLD_H
 
 #include <stdbool.h>
+#include <stddef.h>
 
 #include "config.h"
+#include "assets.h"
 #include "components/component_all.h"
 
 typedef unsigned int entity_t;
@@ -17,10 +19,13 @@ typedef unsigned int component_mask_t;
 #define COMPONENT_PADDLE       (1u << 4)
 #define COMPONENT_BALL         (1u << 5)
 #define COMPONENT_SCORE        (1u << 6)
+#define COMPONENT_SOUND        (1u << 7)
+#define COMPONENT_MUSIC        (1u << 8)
 
 typedef struct {
+    assets_t assets;
     bool alive[MAX_ENTITIES];
-    unsigned int entity_count;
+    unsigned long long entity_count;
     component_mask_t component_mask[MAX_ENTITIES];
 
     transform_c transforms[MAX_ENTITIES];
@@ -30,6 +35,8 @@ typedef struct {
     paddle_c paddles[MAX_ENTITIES];
     ball_c balls[MAX_ENTITIES];
     score_c scores[MAX_ENTITIES];
+    sound_c sounds[MAX_ENTITIES];
+    music_c music[MAX_ENTITIES];
 } world_t;
 
 // helper funcs
@@ -85,5 +92,25 @@ void add_score_c(world_t *world, entity_t id);
 void remove_score_c(world_t *world, entity_t id);
 bool has_score_c(const world_t *world, entity_t id);
 score_c *get_score_c(world_t *world, entity_t id);
+
+// sound funcs
+void add_sound_c(world_t *world, entity_t id, assets_sound_id_e assets_sound_id, float volume);
+void add_sounds(world_t *world, entity_t id, const sound_info_t *sounds, size_t count);
+void remove_sound_c(world_t *world, entity_t id);
+bool has_sound_c(const world_t *world, entity_t id);
+sound_c *get_sound_c(world_t *world, entity_t id);
+
+// music funcs
+void add_music_c(
+    world_t *world,
+    entity_t id,
+    assets_music_id_e assets_music_id,
+    float volume,
+    bool loop,
+    bool playing
+);
+void remove_music_c(world_t *world, entity_t id);
+bool has_music_c(const world_t *world, entity_t id);
+music_c *get_music_c(world_t *world, entity_t id);
 
 #endif //WORLD_H

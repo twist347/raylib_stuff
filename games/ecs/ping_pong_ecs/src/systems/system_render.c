@@ -11,7 +11,7 @@ void system_render(world_t *world, Vector2 screen_res) {
     static const component_mask_t ball_m = COMPONENT_BALL | COMPONENT_TRANSFORM | COMPONENT_RENDER;
     static const component_mask_t score_m = COMPONENT_SCORE | COMPONENT_RENDER;
 
-    for (entity_t id = 0; id < MAX_ENTITIES; ++id) {
+    for (entity_t id = 0; id < world->entity_count; ++id) {
         if (has_components_group(world, id, paddle_m)) {
             render_paddle(
                 get_paddle_c(world, id),
@@ -21,13 +21,13 @@ void system_render(world_t *world, Vector2 screen_res) {
         }
     }
 
-    for (entity_t id = 0; id < MAX_ENTITIES; ++id) {
+    for (entity_t id = 0; id < world->entity_count; ++id) {
         if (has_components_group(world, id, ball_m)) {
             render_ball(get_ball_c(world, id), get_transform_c(world, id), get_render_c(world, id));
         }
     }
 
-    for (entity_t id = 0; id < MAX_ENTITIES; ++id) {
+    for (entity_t id = 0; id < world->entity_count; ++id) {
         if (has_components_group(world, id, score_m)) {
             render_score(get_score_c(world, id), get_render_c(world, id), screen_res);
         }

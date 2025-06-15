@@ -22,8 +22,16 @@ game_t *game_create() {
     SetTargetFPS(TARGET_FPS);
     srand(time(NULL));
 
+    InitAudioDevice();
+
     world_create(&game->world);
     return game;
+}
+
+void game_load_resources(game_t *game) {
+    game->world.assets.sfx[ASSETS_SFX_BOUNCE] = LoadSound(ASSETS_DIR "/sounds/bounce.wav");
+    game->world.assets.sfx[ASSETS_SFX_WALL_HIT] = LoadSound(ASSETS_DIR "/sounds/wall_hit.wav");
+    game->world.assets.music[ASSETS_MUSIC_BG] = LoadMusicStream(ASSETS_DIR "/music/bg_music.ogg");
 }
 
 void game_init(game_t *game) {
@@ -49,10 +57,15 @@ void game_init(game_t *game) {
     add_phys_c(world, ball, BALL_VEL, random_direction(45.f, true));
     add_ball_c(world, ball, BALL_RADIUS, BALL_VEL, BALL_VEL_SCALE);
     add_render_c(world, ball, BALL_COLOR);
+    const sound_info_t ball_sounds[] = {{ASSETS_SFX_BOUNCE, 1.f}, {ASSETS_SFX_WALL_HIT, 1.f}};
+    add_sounds(world, ball, ball_sounds, sizeof(ball_sounds) / sizeof(ball_sounds[0]));
 
     const entity_t score = entity_create(world);
     add_score_c(world, score);
     add_render_c(world, score, HUD_COLOR);
+
+    const entity_t bg_music = entity_create(world);
+    add_music_c(world, bg_music, ASSETS_MUSIC_BG, 0.7f, true, true);
 }
 
 void game_update(game_t *game, float dt) {
@@ -65,6 +78,8 @@ void game_update(game_t *game, float dt) {
     system_transform(&game->world, dt);
     system_collisions(&game->world, game->screen_res);
     system_score(&game->world, game->screen_res);
+    system_sound(&game->world);
+    system_music(&game->world);
 }
 
 void game_render(game_t *game) {
@@ -79,10 +94,20 @@ void game_render(game_t *game) {
     EndDrawing();
 }
 
+void game_unload_resources(game_t *game) {
+    for (size_t i = 0; i < ASSETS_SFX_COUNT; ++i) {
+        UnloadSound(game->world.assets.sfx[i]);
+    }
+    for (size_t i = 0; i < ASSETS_MUSIC_COUNT; ++i) {
+        UnloadMusicStream(game->world.assets.music[i]);
+    }
+}
+
 void game_destroy(game_t *game) {
     world_destroy(&game->world);
-    free(game);
+    CloseAudioDevice();
     CloseWindow();
+    free(game);
 }
 
 static Vector2 random_direction(float max_angle_deg, bool to_left) {

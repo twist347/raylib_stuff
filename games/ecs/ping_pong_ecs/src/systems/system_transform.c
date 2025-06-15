@@ -12,7 +12,7 @@ void system_transform(world_t *world, float dt) {
     static const component_mask_t ball_m = COMPONENT_BALL | COMPONENT_TRANSFORM;
     static const component_mask_t paddle_m = COMPONENT_PADDLE | COMPONENT_INPUT | COMPONENT_PHYS;
 
-    for (entity_t id = 0; id < MAX_ENTITIES; ++id) {
+    for (entity_t id = 0; id < world->entity_count; ++id) {
         if (has_components_group(world, id, paddle_m)) {
             handle_paddle_transform(
                 get_transform_c(world, id),
@@ -22,7 +22,7 @@ void system_transform(world_t *world, float dt) {
         }
     }
 
-    for (entity_t id = 0; id < MAX_ENTITIES; ++id) {
+    for (entity_t id = 0; id < world->entity_count; ++id) {
         if (has_components_group(world, id, ball_m)) {
             handle_ball_transform(
                 get_transform_c(world, id),

@@ -1,15 +1,23 @@
 #ifndef COMPONENT_COLLIDER_H
 #define COMPONENT_COLLIDER_H
 
+#include "raylib.h"
+
+// unused
+
 typedef enum {
-    COLLIDE_TYPE_AABB,
-    COLLIDE_TYPE_CIRCLE,
-    COLLIDE_TYPE_POLYGON,
-} shape_type_e;
+    COLLIDER_TYPE_RECT,
+    COLLIDER_TYPE_CIRCLE,
+} collider_type_e;
 
 typedef struct {
-    shape_type_e shape_type;
-    // ?
+    collider_type_e type;
+
+    union {
+        Rectangle rect;
+        float radius;
+    } shape;
+
 } collider_c;
 
 #endif //COMPONENT_COLLIDER_H
