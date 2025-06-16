@@ -1,12 +1,17 @@
 #ifndef GAME_H
 #define GAME_H
 
-// #include "ecs.h"
-
 #include "world.h"
+
+typedef enum {
+    GAME_STATE_PLAYING,
+    GAME_STATE_PAUSE,
+    GAME_STATE_MENU
+} game_state_t;
 
 typedef struct {
     world_t world;
+    game_state_t state;
     Vector2 screen_res;
     const char *window_title;
     bool running;

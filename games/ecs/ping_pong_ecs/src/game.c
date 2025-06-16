@@ -35,6 +35,7 @@ void game_load_resources(game_t *game) {
 }
 
 void game_init(game_t *game) {
+    game->state = GAME_STATE_PLAYING;
     world_t *world = &game->world;
     const Vector2 sr = game->screen_res;
 

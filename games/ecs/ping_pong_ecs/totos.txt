@@ -3,3 +3,6 @@
 3. TODO: put paddles to init positions whet reset
 4. +TODO: replace MAX_ENTITIES with current count
 5. +TODO: add sounds and music
+6. TODO: add game state
+7. TODO: add event bus
+8. TODO: add sound and music manager

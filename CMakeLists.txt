@@ -19,3 +19,4 @@ add_subdirectory(${GAMES_DIR}/arkanoid)
 add_subdirectory(${GAMES_DIR}/platformer)
 
 add_subdirectory(${GAMES_DIR}/ecs/ping_pong_ecs)
+add_subdirectory(${GAMES_DIR}/ecs/tds_ecs)
